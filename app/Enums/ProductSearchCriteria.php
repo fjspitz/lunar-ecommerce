@@ -5,6 +5,7 @@ namespace App\Enums;
 
 enum ProductSearchCriteria: string
 {
+    case BY_NAME = 'by_name';
     case BY_CATEGORY = 'by_category';
     case BY_BRAND = 'by_brand';
     case BY_ASSOCIATION = 'by_association';

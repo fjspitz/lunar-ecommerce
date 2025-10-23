@@ -18,10 +18,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
             ->middleware('ability:customer:get');
         Route::post('/', [CustomerController::class, 'create'])
             ->middleware('ability:customer:create');
-        Route::post('/group', [CustomerGroupController::class, 'create'])
-            ->middleware('ability:customer:group:create');
+
         Route::delete('/{customer}', [CustomerController::class, 'destroy'])
             ->middleware('ability:customer:delete');
+
+        // Route::post('/group', [CustomerGroupController::class, 'create'])
+        //     ->middleware('ability:customer:group:create');
     });
 
     Route::prefix('products')->group(function () {
@@ -41,9 +43,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/', [ProductController::class, 'brands']);
     });
 
-    Route::prefix('pickups')->group(function () {
-        Route::get('/', [PickupController::class, 'index']);
-    });
+    // Route::prefix('pickups')->group(function () {
+    //     Route::get('/', [PickupController::class, 'index']);
+    // });
 
     Route::prefix('carts')->group(function () {
         Route::post('/', [CartController::class, 'create']);
@@ -62,5 +64,17 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     Route::prefix('search')->group(function () {
         Route::get('/products', [SearchController::class, 'show']);
+    });
+
+    // ---------------------------------------------------------------------------------------
+    Route::prefix('admin')->group(function () {
+
+        /**
+         * El customer group lo usamos como el merchant para segmentar los productos.
+         */
+        Route::prefix('merchants')->group(function () {
+            Route::post('/', [CustomerGroupController::class, 'create'])
+                ->middleware('ability:customer:group:create');
+        });
     });
 });

@@ -16,7 +16,8 @@ class SearchController extends Controller
         $validated = $request->validate([
             'customer_group' => 'required|string',
             'criteria' => [Rule::enum(ProductSearchCriteria::class)],
-            'value' => 'required|int',
+            //'value' => 'required|int',
+            'value' => 'required|string',
             'page_size' => 'int|min:1|max:20'
         ]);
 

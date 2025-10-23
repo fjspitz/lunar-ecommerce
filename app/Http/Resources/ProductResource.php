@@ -14,7 +14,9 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $locale = config()->get('locale', 'es');
+        //$locale = config()->get('locale', 'es');
+        //$locale = config('app.locale', 'es');
+        $locale = 'en';
 
         $ava = $this->customerGroups()
             ->where('product_id', $this->id)
@@ -33,7 +35,12 @@ class ProductResource extends JsonResource
             'brand_name' => $this->brand->name ?? '-',
             'product_type_name' => $this->productType->name,
             'status' => $this->status,
-            'availability' => $ava,
+            //'availability' => $ava,
+            'availability' => [
+                'purchasable' => (bool)$ava['purchasable'],
+                'visible' => (bool)$ava['visible'],
+                'enabled' => (bool)$ava['enabled'],
+            ],
             'stock' => $this->variants()->first()->stock,
             'sku' => $this->variants()->first()->sku,
             'price' => round((float) $this->variants()->first()->getPrices()->first()->price->value / 100, 2),

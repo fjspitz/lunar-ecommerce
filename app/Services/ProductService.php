@@ -12,6 +12,7 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Lunar\FieldTypes\Text;
 use Lunar\FieldTypes\TranslatedText;
 use Lunar\Models\Brand;
@@ -83,29 +84,34 @@ class ProductService
             $new_product->status = 'published';
             $new_product->attribute_data = [
                 'name' => new TranslatedText(collect([
-                    'es' => new Text($product['name']),
+                    'en' => new Text($product['name']),
                 ])),
                 'description' => new TranslatedText(collect([
-                    'es' => new Text($product['description']),
+                    'en' => new Text($product['description']),
                 ])),
             ];
             $new_product->save();
 
             $image_exists = Arr::exists($product, 'image');
+            //info($product['image']);
 
             if ($image_exists) {
-                $new_product->addMedia($product['image'])->withCustomProperties(['caption' => null, 'primary' => true, 'position' => 1])->toMediaCollection('images');
+                Log::info("Agregando imagen al producto");
+                $new_product->addMedia($product['image'])
+                    ->withCustomProperties(['caption' => $product['name'], 'primary' => true, 'position' => 1])
+                    ->toMediaCollection('images');
             }
 
-            $customer_groups = CustomerGroup::all();
-            foreach ($customer_groups as $customer_group) {
-                $new_product->customerGroups()->save($customer_group);
-                $new_product->customerGroups()->updateExistingPivot($customer_group->id, [
-                    'enabled' => true,
-                    'visible' => true,
-                    'purchasable' => true,
-                ]);
-            }
+            // Esto era para Ademarket: acá no va
+            // $customer_groups = CustomerGroup::all();
+            // foreach ($customer_groups as $customer_group) {
+            //     $new_product->customerGroups()->save($customer_group);
+            //     $new_product->customerGroups()->updateExistingPivot($customer_group->id, [
+            //         'enabled' => true,
+            //         'visible' => true,
+            //         'purchasable' => true,
+            //     ]);
+            // }
 
             $channel_id = Channel::first()->id;
             $new_product->channels()->updateExistingPivot($channel_id, ['enabled' => true]);
@@ -121,11 +127,17 @@ class ProductService
             $product_variant->save();
 
             $price = new Price();
-            $price->currency_id = Currency::first()->id;
-            $price->priceable_type = ProductVariant::class;
+            //$price->currency_id = Currency::first()->id;
+            $price->currency_id = Currency::default()->first()->id;
+            //$price->priceable_type = ProductVariant::class;
+            $price->priceable_type = 'product_variant';
             $price->priceable_id = $product_variant->id;
             $price->price = $product['price'] * 100;
             $price->save();
+
+            // Customer groups: asigna el producto creado exclusivamente al customer group del usuario que lo dió de alta.
+            $customer_group = CustomerGroup::where('handle', $product['customer_group_handle'])->first();
+            $new_product->customerGroups()->updateExistingPivot($customer_group->id, ['enabled' => true, 'visible' => true, 'purchasable' => true]);
 
             return new ProductResource(Product::find($new_product->id));
         });
@@ -179,7 +191,7 @@ class ProductService
                 ->where('element_type', Product::class)
                 ->where('element_id', $product->id)
                 ->first();
-            
+
             $product_url->update([
                 'slug' => Str::of($product_update_info['name'])->slug('-')
             ]);

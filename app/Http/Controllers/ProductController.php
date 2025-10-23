@@ -59,17 +59,21 @@ class ProductController extends Controller
             'stock' => 'required',
             'price' => 'required|numeric|min:0',
             'image' => 'file',
+            // 'image' => 'image',
+            'customer_group_handle' => 'required|string',
         ]);
+
+        //info("Customer group handle: {$validated['customer_group_handle']}");
 
         try {
             Log::info("Creando un producto: {$validated['name']}, categoría: {$validated['product_type_id']}");
-            
+
             $product = $service->create($validated);
 
-            Log::info("Se creó el siguiente producto para todos los customer groups existentes.", ["product:" => $product]);
+            //Log::info("Se creó el siguiente producto para todos los customer groups existentes.", ["product:" => $product]);
 
             return response($product, 201);
-        } catch (ProductTypeDoesNotExistException|BrandDoesNotExistException $e) {
+        } catch (ProductTypeDoesNotExistException | BrandDoesNotExistException $e) {
             Log::error("Ocurrió un error con la categoría o marca al intentar crear un producto: {$e->errorMessage()}");
 
             return response([
@@ -77,7 +81,7 @@ class ProductController extends Controller
             ], 400);
         } catch (Exception $e) {
             Log::error("Ocurrió un error al intentar crear un producto: {$e->getMessage()}", ["error" => $e]);
-            
+
             return response([
                 'message' => $e->getMessage(),
             ], 400);

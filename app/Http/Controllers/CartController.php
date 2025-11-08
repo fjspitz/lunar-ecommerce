@@ -12,6 +12,7 @@ use Lunar\Models\Channel;
 use Lunar\Models\Country;
 use Lunar\Models\Currency;
 use Lunar\Models\Customer;
+use Lunar\Models\Product;
 use Lunar\Models\ProductVariant;
 
 class CartController extends Controller
@@ -26,15 +27,18 @@ class CartController extends Controller
     public function create(Request $request)
     {
         $validated = $request->validate([
-            'curp' => 'required|string|',
-            'company_name' => 'required|string|',
+            //'curp' => 'required|string|',
+            //'company_name' => 'required|string|',
+            'account_ref' => 'required|string|',
         ]);
-        
+
         Log::info("Creando un carrito para cliente con los datos: ", $validated);
-        
-        $customer = Customer::where('company_name', $validated['company_name'])
-            ->whereJsonContains('meta->curp', $validated['curp'])
-            ->first();
+
+        // $customer = Customer::where('company_name', $validated['company_name'])
+        //     ->whereJsonContains('meta->curp', $validated['curp'])
+        //     ->first();
+
+        $customer = Customer::where('account_ref', $validated['account_ref'])->first();
 
         $channel = Channel::first();
         $currency = Currency::where('default', true)->first();
@@ -59,16 +63,21 @@ class CartController extends Controller
 
     public function addLine(Request $request, Cart $cart)
     {
-        Log::info("Agregando un producto al carrito: {$cart->id}");
+        $purchasable_id = $request->input('purchasable_id');
+
+        Log::info("Agregando producto: {$purchasable_id} al carrito: {$cart->id}");
 
         $validated = $request->validate([
             'purchasable_id' => 'required|numeric|',
             'quantity' => 'required|min:1|max:99|',
         ]);
 
+        $purchasable = Product::find($purchasable_id)->variants()->first();
+
         $cartLine = new \Lunar\Models\CartLine([
             'cart_id' => $cart->id,
-            'purchasable_type' => ProductVariant::class,
+            //'purchasable_type' => ProductVariant::class,
+            'purchasable_type' => $purchasable->class,
             'purchasable_id' => $validated['purchasable_id'],
             'quantity' => $validated['quantity'],
         ]);

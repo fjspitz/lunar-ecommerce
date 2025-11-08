@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Lunar\Models\CustomerGroup;
 
 class ProductResource extends JsonResource
 {
@@ -20,7 +21,10 @@ class ProductResource extends JsonResource
 
         $ava = $this->customerGroups()
             ->where('product_id', $this->id)
+            ->where('enabled', true)
             ->first()->pivot;
+
+        $customer_group_name = CustomerGroup::find($ava['customer_group_id'])->name;
 
         $description = '';
 
@@ -35,8 +39,10 @@ class ProductResource extends JsonResource
             'brand_name' => $this->brand->name ?? '-',
             'product_type_name' => $this->productType->name,
             'status' => $this->status,
+            'owner' => $customer_group_name,
             //'availability' => $ava,
             'availability' => [
+                //'customer_group' => $customer_group_name,
                 'purchasable' => (bool)$ava['purchasable'],
                 'visible' => (bool)$ava['visible'],
                 'enabled' => (bool)$ava['enabled'],

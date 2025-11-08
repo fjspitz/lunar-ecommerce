@@ -66,6 +66,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/products', [SearchController::class, 'show']);
     });
 
+    Route::prefix('merchants')->group(function () {
+        Route::get('/', [CustomerGroupController::class, 'index'])->name('merchants.index');
+    });
+
     // ---------------------------------------------------------------------------------------
     Route::prefix('admin')->group(function () {
 
@@ -73,6 +77,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
          * El customer group lo usamos como el merchant para segmentar los productos.
          */
         Route::prefix('merchants')->group(function () {
+            Route::get('/', [CustomerGroupController::class, 'index'])->name('merchants.index');
+
             Route::post('/', [CustomerGroupController::class, 'create'])
                 ->middleware('ability:customer:group:create');
         });

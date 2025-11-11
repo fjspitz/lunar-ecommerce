@@ -63,27 +63,27 @@ class CartController extends Controller
 
     public function addLine(Request $request, Cart $cart)
     {
-        $purchasable_id = $request->input('purchasable_id');
-
-        Log::info("Agregando producto: {$purchasable_id} al carrito: {$cart->id}");
-
         $validated = $request->validate([
-            'purchasable_id' => 'required|numeric|',
+            'product_id' => 'required|numeric|',
             'quantity' => 'required|min:1|max:99|',
         ]);
 
-        $purchasable = Product::find($purchasable_id)->variants()->first();
+        $product_id = $validated['product_id'];
+
+        Log::info("Agregando producto: {$product_id} al carrito: {$cart->id}");
+
+        //$purchasable = Product::find($purchasable_id)->variants()->first();
+        $product_variant = Product::find($product_id)->variants()->first();
 
         $cartLine = new \Lunar\Models\CartLine([
             'cart_id' => $cart->id,
-            //'purchasable_type' => ProductVariant::class,
-            'purchasable_type' => $purchasable->class,
-            'purchasable_id' => $validated['purchasable_id'],
+            'purchasable_type' => ProductVariant::class,
+            'purchasable_id' => $product_variant->id,
             'quantity' => $validated['quantity'],
         ]);
         $cartLine->save();
 
-        Log::info("El producto {$cartLine->purchasable_id} fue agregado al carrito: {$cart->id}.");
+        Log::info("El producto {$product_id} fue agregado al carrito: {$cart->id}.");
 
         return response()->json(new CartResource($cart), 201);
     }
